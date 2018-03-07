@@ -31,7 +31,7 @@ def sendData(socket, data):
         length = '0' + length
 
     # Send the data string
-    socket.send(length)
+    socket.send(length.encode())
     socket.send(data_string)
     return
 
@@ -48,7 +48,7 @@ def sendData(socket, data):
 def receiveData(socket):
 
     # first we get a string that says how long the serialized string is
-    length = socket.recv(BODY_SIZE_STRING_SIZE)
+    length = socket.recv(BODY_SIZE_STRING_SIZE).decode()
     if length == '':
 	    raise socket_error("")
     length = int(length)

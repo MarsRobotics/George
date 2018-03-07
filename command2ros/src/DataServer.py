@@ -96,7 +96,7 @@ dataDist = DataDistributor()
 dataDist.start()
 
 #create ros publisher to update/send data
-pub = rospy.Publisher('MovementCommand', queue_size=10)
+pub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
 rospy.init_node('command2ros', anonymous=True)
 
 #start receiving movement commands
