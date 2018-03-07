@@ -1,7 +1,6 @@
-print("hello")
+#!/usr/bin/env python3
 import sys
 sys.path.append("/home/pi/ros_catkin_ws/src/command2ros/src/")
-exit()
 import rospy
 import roslib
 import time

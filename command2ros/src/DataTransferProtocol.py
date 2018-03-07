@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # cPicke is faster
 try:
     import cPickle as pickle
