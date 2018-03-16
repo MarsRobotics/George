@@ -1,7 +1,6 @@
 float32 driveDist
-int32 turn
+float32 turn
 bool dig
 bool dump
 bool packin
 bool eStop
-bool stop

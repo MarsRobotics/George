@@ -50,7 +50,7 @@ def receiveData(socket):
     # first we get a string that says how long the serialized string is
     length = socket.recv(BODY_SIZE_STRING_SIZE).decode()
     if length == '':
-	    raise socket_error("")
+	    raise socket_error()
     length = int(length)
 
     # If we have received the first part of the data, then we need to get all of it

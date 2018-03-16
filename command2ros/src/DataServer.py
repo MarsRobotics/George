@@ -23,22 +23,63 @@ DataDistributor     Create threads to control network connections
 class DataDistributor(threading.Thread):
 
     def __init__(self):
-        self.data = MovementData()
+        self.data = MovementData()        
         threading.Thread.__init__(self)
         return
 
     #set up socket to receive incoming requests
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(("192.168.1.45", 10000)) #George, localhost to make faster?
+        server.bind(("127.0.0.1", 10000)) #George
         server.listen(1) #backlog is 1
 
-        #accept connections and spawn thread to handle
-        #until server closes
-        while True:
-            (clientSocket, address) = server.accept()
-            cs = DataServer(clientSocket, self, address)
-            cs.run()
+        #create connection
+        (clientSocket, address) = server.accept()
+        dataServer = DataServer()
+        print("Running connection")
+        dataServer.start()
+        self.getCommands(dataServer, clientSocket, server)              
+        return
+    
+    def getCommands(self, dataServer, clientSocket, server):
+        print("Running")
+        try:
+            sendTime = 0
+
+            while True: #**not rospy.is_shutdown():
+                clientSocket.setblocking(1)
+
+                #send last movement data to the client if time has passed
+                if sendTime < time.time(): #**delete
+                    sendData(clientSocket, self.data)
+                    sendTime = time.time() + 1/float(sendRate) #**sendRate.sleep()
+
+                try:
+                    clientSocket.setblocking(0)
+
+                    #get new command
+                    newCommand = receiveData(clientSocket)
+
+                    #add command to execution queue
+                    print(newCommand.driveDist) 
+                    dataServer.addCommand(newCommand)                   
+                except socket.error:
+                    continue                
+                
+                #e exits program, any other character continues 
+                if sys.stdin.read(1).lower() == 'e':
+                    clientSocket.shutdown(socket.SHUT_RDWR)
+                    clientSocket.close()
+                    server.shutdown(socket.SHUT_RDWR)
+                    server.close()
+                    dataServer.stop()
+                    exit()
+        except socket.error: 
+            #lost connection, stop robot
+            newCommand = MovementData()
+            newCommand.eStop = True
+            dataServer.addCommand(newCommand)
+            return
         return
 
 """
@@ -47,49 +88,43 @@ DataServer      Manage connection to a given client, receives and
 """
 class DataServer(threading.Thread):
 
-    def __init__(self, socket, distributor, address):
-        self.socket = socket
-        self.distributor = distributor #George
-        self.address = address         
-
+    def __init__(self):
+        self.commandQueue = []   #queue for sending movement commands to motors
         threading.Thread.__init__(self)
+        self._stop_event = threading.Event()
+        return
+
+    def stop(self):
+        self._stop_event.set()
+
+    def addCommand(self, newCommand):
+        print("Inserting command")
+        if newCommand.eStop:
+            self.commandQueue.insert(0, newCommand)
+        else:
+            self.commandQueue.append(newCommand)
         return
 
     def run(self):
-        try:
-            sendTime = 0
+        while True:
+            if self._stop_event.is_set():
+                return
 
-            while True: #**not rospy.is_shutdown():
-                self.socket.setblocking(1)
+            if len(self.commandQueue) > 0:
+                print("Command popped")    
+                command = self.commandQueue.pop(0)
+                print(command.driveDist)
 
-                #send last movement data to the client if time has passed
-                if sendTime < time.time(): #**delete
-                    sendData(self.socket, self.distributor.data)
-                    sendTime = time.time() + 1/float(sendRate) #**sendRate.sleep()
-
-                try:
-                    self.socket.setblocking(0)
-
-                    #get new command
-                    newCommand = receiveData(self.socket)
-
-                    #add command to execution queue
-                    if newCommand.eStop:
-                        commandQueue.insert(0, newCommand)
-                    else:
-                        commandQueue.append(newCommand)
-                except socket.error:
-                    continue
-        except socket.error: 
-            #lost connection, stop robot
-            newCommand = MovementData()
-            newCommand.eStop = True
-            commandQueue.insert(0, newCommand)
-            return
-        return
-
-#queue for sending movement commands to motors
-commandQueue = []
+                #update to the next command
+                '''mc = MovementCommand()
+                mc.driveDist = command.driveDist #distance to drive meters  
+                mc.turn = command.turn           #degrees for articulation motors
+                mc.dig = command.dig             
+                mc.dump = command.dump    
+                mc.packin = command.packin       #ending sequence, wheels tucked under
+                mc.eStop = command.eStop         #stop robot TODO:eStop and stop?
+                print(mc.driveDist)'''
+                pub.publish(driveDist=command.driveDist, turn=command.turn, dig=command.dig, dump=command.dump, packin=command.packin, eStop=command.eStop, stop=command.stop)   
 
 #handles connections between clients
 dataDist = DataDistributor()
@@ -102,16 +137,4 @@ rospy.init_node('command2ros', anonymous=True)
 #start receiving movement commands
 cr = CommandRobot()
 cr.createConnection()
-
-#publish commands to arduino
-while True:
-    if len(commandQueue) > 0:
-        command = commandQueue.pop(0)
-
-        #update to the next command
-        mc = MovementCommand()
-        mc.driveDist = command.driveDist #distance to drive meters  
-        mc.turn = command.turn           #degrees for articulation motors
-        mc.packin = command.packin       #ending sequence, wheels tucked under
-        mc.eStop = command.eStop         #stop robot TODO:eStop and stop?
-        pub.publish(mc)
+    
