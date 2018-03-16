@@ -13,17 +13,18 @@ from DataTransferProtocol import receiveData, sendData
 BODY_SIZE_STRING_SIZE = 10
 
 """
-CommandRobot    Send commands to Arduino through the DataServer
+CommandRobot    Send robot movement commands to Arduino
 """
 class CommandRobot:
 
     def __init__(self):
-        self.HOST = "127.0.0.1" #George
-        self.PORT = 10000 #same port as DataDistributor
+        self.HOST = "127.0.0.1"
+        self.PORT = 10000 
         self.lastData = MovementData()
         self.currentData = MovementData()
         return
     
+    #communication with the DataDistributor
     def createConnection(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             #connect to host
@@ -37,11 +38,13 @@ class CommandRobot:
                     s.close()
                     exit()
 
+                #assign new command
                 self.setMovementData()
 
-                #send new data
+                #send new command data
                 sendData(s, self.currentData)
 
+    #assign a new command for the robot
     def setMovementData(self):
         self.currentData.driveDist = 10.5
         self.currentData.turn = 45        

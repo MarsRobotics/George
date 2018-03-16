@@ -14,11 +14,10 @@ from command2ros.msg import MovementCommand
 
 roslib.load_manifest('command2ros')
 
-sendRate = 10 #Hz #**sendRate = rospy.Rate(10) #Hz
-
 """
-DataDistributor     Create threads to control network connections
-                    from clients
+DataDistributor     Receive new commands and create service to 
+                    maintain queue of commands and publish when 
+                    the arduino is ready to receive commands
 """
 class DataDistributor(threading.Thread):
 
@@ -27,32 +26,34 @@ class DataDistributor(threading.Thread):
         threading.Thread.__init__(self)
         return
 
-    #set up socket to receive incoming requests
+    #create connection to receive commands
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(("127.0.0.1", 10000)) #George
-        server.listen(1) #backlog is 1
+        server.listen(1)                  #accept only one connection
 
-        #create connection
-        (clientSocket, address) = server.accept()
+        #begin publisher mechanism
         dataServer = DataServer()
-        print("Running connection")
         dataServer.start()
+
+        #create connection to receive commands
+        (clientSocket, address) = server.accept()        
+
+        #begin receiving commands
         self.getCommands(dataServer, clientSocket, server)              
         return
     
+    #receive new movement commands 
     def getCommands(self, dataServer, clientSocket, server):
         print("Running")
+        sendRate = rospy.Rate(10) #10 Hz
         try:
-            sendTime = 0
-
-            while True: #**not rospy.is_shutdown():
+            while not rospy.is_shutdown(): 
                 clientSocket.setblocking(1)
 
-                #send last movement data to the client if time has passed
-                if sendTime < time.time(): #**delete
-                    sendData(clientSocket, self.data)
-                    sendTime = time.time() + 1/float(sendRate) #**sendRate.sleep()
+                #send last movement data to the client
+                sendData(clientSocket, self.data)
+                sendRate.sleep()
 
                 try:
                     clientSocket.setblocking(0)
@@ -61,7 +62,6 @@ class DataDistributor(threading.Thread):
                     newCommand = receiveData(clientSocket)
 
                     #add command to execution queue
-                    print(newCommand.driveDist) 
                     dataServer.addCommand(newCommand)                   
                 except socket.error:
                     continue                
@@ -83,20 +83,22 @@ class DataDistributor(threading.Thread):
         return
 
 """
-DataServer      Manage connection to a given client, receives and
-                sends commands
+DataServer      Stores all commands in a queue, publishes when Arduino is ready
+                unless the next command is to eStop
 """
 class DataServer(threading.Thread):
 
     def __init__(self):
-        self.commandQueue = []   #queue for sending movement commands to motors
+        self.commandQueue = []               
         threading.Thread.__init__(self)
         self._stop_event = threading.Event()
         return
 
+    #prepare thread to finish execution
     def stop(self):
         self._stop_event.set()
 
+    #add command to queue to be published
     def addCommand(self, newCommand):
         print("Inserting command")
         if newCommand.eStop:
@@ -105,28 +107,21 @@ class DataServer(threading.Thread):
             self.commandQueue.append(newCommand)
         return
 
+    #publish next command
     def run(self):
         while True:
+            #let thread terminate
             if self._stop_event.is_set():
                 return
 
+            #publish as long as there is a command to publish
             if len(self.commandQueue) > 0:
-                print("Command popped")    
                 command = self.commandQueue.pop(0)
-                print(command.driveDist)
 
                 #update to the next command
-                '''mc = MovementCommand()
-                mc.driveDist = command.driveDist #distance to drive meters  
-                mc.turn = command.turn           #degrees for articulation motors
-                mc.dig = command.dig             
-                mc.dump = command.dump    
-                mc.packin = command.packin       #ending sequence, wheels tucked under
-                mc.eStop = command.eStop         #stop robot TODO:eStop and stop?
-                print(mc.driveDist)'''
                 pub.publish(driveDist=command.driveDist, turn=command.turn, dig=command.dig, dump=command.dump, packin=command.packin, eStop=command.eStop, stop=command.stop)   
 
-#handles connections between clients
+#handles connection to client to receive commands
 dataDist = DataDistributor()
 dataDist.start()
 

@@ -10,6 +10,6 @@ class MovementData:
         self.dig = False
         self.dump = False
         self.packin = False     #ending sequence, wheels roll in so tucked under
-        self.eStop = False      #stop robot
+        self.eStop = False      
         self.stop = False
         return
