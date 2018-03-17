@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 import sys
-sys.path.append("/home/pi/ros_catkin_ws/src/command2ros/src/")
 import rospy
 import roslib
 import time
 import socket
 import threading
 
-from CommandRobot import CommandRobot
+#from CommandRobot import CommandRobot
 from MovementData import MovementData
 from DataTransferProtocol import receiveData, sendData
 from command2ros.msg import MovementCommand
-
-roslib.load_manifest('command2ros')
 
 """
 DataDistributor     Receive new commands and create service to 
@@ -21,8 +18,9 @@ DataDistributor     Receive new commands and create service to
 """
 class DataDistributor(threading.Thread):
 
-    def __init__(self):
-        self.data = MovementData()        
+    def __init__(self, pub):
+        self.data = MovementData()      
+        self.pub = pub  
         threading.Thread.__init__(self)
         return
 
@@ -30,10 +28,10 @@ class DataDistributor(threading.Thread):
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(("127.0.0.1", 10000)) #George
-        server.listen(1)                  #accept only one connection
+        server.listen(1)                  #accept only one connection        
 
         #begin publisher mechanism
-        dataServer = DataServer()
+        dataServer = DataServer(self.pub)
         dataServer.start()
 
         #create connection to receive commands
@@ -88,7 +86,8 @@ DataServer      Stores all commands in a queue, publishes when Arduino is ready
 """
 class DataServer(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, pub):
+        self.pub = pub
         self.commandQueue = []               
         threading.Thread.__init__(self)
         self._stop_event = threading.Event()
@@ -119,17 +118,20 @@ class DataServer(threading.Thread):
                 command = self.commandQueue.pop(0)
 
                 #update to the next command
-                pub.publish(driveDist=command.driveDist, turn=command.turn, dig=command.dig, dump=command.dump, packin=command.packin, eStop=command.eStop, stop=command.stop)   
+                self.pub.publish(driveDist=command.driveDist, turn=command.turn, dig=command.dig, dump=command.dump, packin=command.packin, eStop=command.eStop, stop=command.stop)   
 
-#handles connection to client to receive commands
-dataDist = DataDistributor()
-dataDist.start()
+'''
+if __name__ == "__main__":
+    #handles connection to client to receive commands
+    dataDist = DataDistributor()
+    dataDist.start()
 
-#create ros publisher to update/send data
-pub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
-rospy.init_node('command2ros', anonymous=True)
+    #create ros publisher to update/send data
+    #pub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
+    #rospy.init_node('command2ros', anonymous=True)
 
-#start receiving movement commands
-cr = CommandRobot()
-cr.createConnection()
+    #start receiving movement commands
+    cr = CommandRobot()
+    cr.createConnection()
+'''
     
