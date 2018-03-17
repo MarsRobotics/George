@@ -38,25 +38,26 @@ class StateMachine():
         self.currentState = self.StartState
 
         #transition criteria
-        self.inExcavationZone = False
-        self.hopperEmpty = True
-        self.inDumpZone = False
+        self.inExcavationZone = False   #ScanDigState to DigState
+        self.hopperEmpty = True         #MoveState to ScanDigState if true, otherwise ScanDumpState
+        self.inDumpZone = False         #ScanDumpState to DockingBinState
 
     #control program
     def startRobot(self):
-        pub = self.rosSetup()
-        self.dataDistributorSetup(pub)
-        #start receiving movement commands
+        pub = self.rosSetup()           
+        self.dataDistributorSetup(pub)  
+
+        #use to update the next command and send to arduino 
         cr = CommandRobot()
-        cr.createConnection()
+        cr.sendCommand()     
 
-        print("\n>main() not implemented\n")
-
+    #create distributor and server for movement commands
     def dataDistributorSetup(self, pub):
         #handles connection to client to receive commands
         dataDist = DataDistributor(pub)
         dataDist.start()
 
+    #ros node for program and publisher for movement commands
     def rosSetup(self):
         #create ros publisher to update/send data
         pub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)

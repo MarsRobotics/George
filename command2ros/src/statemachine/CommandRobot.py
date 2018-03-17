@@ -25,7 +25,7 @@ class CommandRobot:
         return
     
     #communication with the DataDistributor
-    def createConnection(self):
+    def sendCommand(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             #connect to host
             s.connect((self.HOST,self.PORT))
@@ -38,14 +38,18 @@ class CommandRobot:
                     s.close()
                     exit()
 
-                #assign new command
-                self.setMovementData()
+                self.setCommand(self.lastData)
 
                 #send new command data
                 sendData(s, self.currentData)
 
     #assign a new command for the robot
-    def setMovementData(self):
-        self.currentData.driveDist = 10.5
-        self.currentData.turn = 45        
+    def setCommand(self, command):
+        self.currentData.driveDist = 10.5#command.driveDist
+        self.currentData.turn = command.turn
+        self.currentData.dig = command.dig
+        self.currentData.dump = command.dump
+        self.currentData.packin = command.packin
+        self.currentData.eStop = command.eStop
+        self.currentData.stop = command.stop        
 
