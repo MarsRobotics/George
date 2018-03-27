@@ -52,6 +52,8 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    MovementCommand.msg
+   ArduinoMessage.msg
+   ScanCommand.msg
  )
 ## Generate services in the 'srv' folder
 # add_service_files(

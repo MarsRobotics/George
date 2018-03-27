@@ -21,7 +21,7 @@ class CommandRobot:
         self.HOST = "127.0.0.1"
         self.PORT = 10000 
         self.lastData = MovementData()
-        self.currentData = MovementData()
+        self.currentData = MovementData()        
         return
     
     #communication with the DataDistributor
@@ -30,18 +30,15 @@ class CommandRobot:
             #connect to host
             s.connect((self.HOST,self.PORT))
 
-            while True:
-                #receive last data send
-                try:
-                    receiveData(s)
-                except socket.error:
-                    s.close()
-                    exit()
+            #receive last data sent
+            try:
+                receiveData(s)
+            except socket.error:
+                s.close()
+                exit()
 
-                self.setCommand(self.lastData)
-
-                #send new command data
-                sendData(s, self.currentData)
+            #send new command data
+            sendData(s, self.currentData)
 
     #assign a new command for the robot
     def setCommand(self, command):
@@ -49,7 +46,7 @@ class CommandRobot:
         self.currentData.turn = command.turn
         self.currentData.dig = command.dig
         self.currentData.dump = command.dump
-        self.currentData.packin = True #command.packin
+        self.currentData.packin = command.packin
         self.currentData.eStop = command.eStop
         self.currentData.cancel = command.cancel
         self.currentData.pause = command.pause

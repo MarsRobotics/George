@@ -3,7 +3,7 @@ from states.State import State
 class DigState(State):
     #init attributes of state
     def __init__(self):
-        super().__init__("Dig", "ScanDump")
+        super().__init__("DigState", "ScanDumpState")
         
 
     #implementation for each state: overridden

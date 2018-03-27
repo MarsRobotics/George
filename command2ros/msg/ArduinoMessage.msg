@@ -1,0 +1,8 @@
+bool ready
+int32 serialID
+string progress
+bool errorDriving
+bool errorDigging
+bool errorDumping
+bool errorTurning
+int32 messageID

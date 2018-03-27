@@ -65,6 +65,7 @@ class DataDistributor(threading.Thread):
                     continue                
                 
                 #e exits program, any other character continues 
+                '''
                 if sys.stdin.read(1).lower() == 'e':
                     clientSocket.shutdown(socket.SHUT_RDWR)
                     clientSocket.close()
@@ -72,6 +73,7 @@ class DataDistributor(threading.Thread):
                     server.close()
                     dataServer.stop()
                     exit()
+                '''
         except socket.error: 
             #lost connection, stop robot
             newCommand = MovementData()
@@ -131,19 +133,4 @@ class DataServer(threading.Thread):
 			eStop=command.eStop, 
 			pause=command.pause,
 			cancel=command.cancel)   
-
-'''
-if __name__ == "__main__":
-    #handles connection to client to receive commands
-    dataDist = DataDistributor()
-    dataDist.start()
-
-    #create ros publisher to update/send data
-    #pub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
-    #rospy.init_node('command2ros', anonymous=True)
-
-    #start receiving movement commands
-    cr = CommandRobot()
-    cr.createConnection()
-'''
     

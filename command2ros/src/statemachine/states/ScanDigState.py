@@ -3,7 +3,7 @@ from states.State import State
 class ScanDigState(State):
     #init attributes of state
     def __init__(self):
-        super().__init__("ScanDig", "Move")
+        super().__init__("ScanDigState", "MoveDigState")
 
     #implementation for each state: overridden
     def run(self):
