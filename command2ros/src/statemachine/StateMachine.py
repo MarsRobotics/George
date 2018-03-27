@@ -49,7 +49,10 @@ class StateMachine():
 
         #use to update the next command and send to arduino 
         cr = CommandRobot()
+        self.currentState.run(cr)
         cr.sendCommand()     
+        #set the current state to the specified next state
+        self.currentState =  currentState.nextState
 
     #create distributor and server for movement commands
     def dataDistributorSetup(self, pub):
