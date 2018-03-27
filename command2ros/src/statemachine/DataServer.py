@@ -118,7 +118,19 @@ class DataServer(threading.Thread):
                 command = self.commandQueue.pop(0)
 
                 #update to the next command
-                self.pub.publish(driveDist=command.driveDist, turn=command.turn, dig=command.dig, dump=command.dump, packin=command.packin, eStop=command.eStop, stop=command.stop)   
+                self.pub.publish(
+			serialID=command.serialID,
+			manual=command.manual,
+			manualDrive=command.manualDrive,
+			manualTurn=command.manualTurn,
+			driveDist=command.driveDist, 
+			turn=command.turn, 
+			dig=command.dig, 
+			dump=command.dump, 
+			packin=command.packin, 
+			eStop=command.eStop, 
+			pause=command.pause,
+			cancel=command.cancel)   
 
 '''
 if __name__ == "__main__":

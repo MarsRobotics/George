@@ -7,7 +7,7 @@ class StartState(State):
         self.transitionReady = False
 
     #implementation for each state: overridden
-    def run(self):
+    def run(self,cr):
         print("\n>run() not implemented\n")
 
         #always begin with no transition

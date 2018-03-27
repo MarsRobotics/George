@@ -45,11 +45,15 @@ class CommandRobot:
 
     #assign a new command for the robot
     def setCommand(self, command):
-        self.currentData.driveDist = 10.5#command.driveDist
+        self.currentData.driveDist = command.driveDist
         self.currentData.turn = command.turn
         self.currentData.dig = command.dig
         self.currentData.dump = command.dump
-        self.currentData.packin = command.packin
+        self.currentData.packin = True #command.packin
         self.currentData.eStop = command.eStop
-        self.currentData.stop = command.stop        
+        self.currentData.cancel = command.cancel
+        self.currentData.pause = command.pause
+        self.currentData.manualDrive = command.manualDrive
+        self.currentData.manualTurn = command.manualTurn
+        self.currentData.serialID = command.serialID
 

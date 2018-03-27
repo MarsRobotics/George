@@ -12,6 +12,14 @@ namespace command2ros
   class MovementCommand : public ros::Msg
   {
     public:
+      typedef int32_t _serialID_type;
+      _serialID_type serialID;
+      typedef bool _manual_type;
+      _manual_type manual;
+      typedef int32_t _manualDrive_type;
+      _manualDrive_type manualDrive;
+      typedef int32_t _manualTurn_type;
+      _manualTurn_type manualTurn;
       typedef float _driveDist_type;
       _driveDist_type driveDist;
       typedef int32_t _turn_type;
@@ -24,23 +32,67 @@ namespace command2ros
       _packin_type packin;
       typedef bool _eStop_type;
       _eStop_type eStop;
-      typedef bool _stop_type;
-      _stop_type stop;
+      typedef bool _pause_type;
+      _pause_type pause;
+      typedef bool _cancel_type;
+      _cancel_type cancel;
 
     MovementCommand():
+      serialID(0),
+      manual(0),
+      manualDrive(0),
+      manualTurn(0),
       driveDist(0),
       turn(0),
       dig(0),
       dump(0),
       packin(0),
       eStop(0),
-      stop(0)
+      pause(0),
+      cancel(0)
     {
     }
 
     virtual int serialize(unsigned char *outbuffer) const
     {
       int offset = 0;
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_serialID;
+      u_serialID.real = this->serialID;
+      *(outbuffer + offset + 0) = (u_serialID.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_serialID.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_serialID.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_serialID.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->serialID);
+      union {
+        bool real;
+        uint8_t base;
+      } u_manual;
+      u_manual.real = this->manual;
+      *(outbuffer + offset + 0) = (u_manual.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->manual);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_manualDrive;
+      u_manualDrive.real = this->manualDrive;
+      *(outbuffer + offset + 0) = (u_manualDrive.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_manualDrive.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_manualDrive.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_manualDrive.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->manualDrive);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_manualTurn;
+      u_manualTurn.real = this->manualTurn;
+      *(outbuffer + offset + 0) = (u_manualTurn.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_manualTurn.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_manualTurn.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_manualTurn.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->manualTurn);
       union {
         float real;
         uint32_t base;
@@ -92,16 +144,64 @@ namespace command2ros
       union {
         bool real;
         uint8_t base;
-      } u_stop;
-      u_stop.real = this->stop;
-      *(outbuffer + offset + 0) = (u_stop.base >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->stop);
+      } u_pause;
+      u_pause.real = this->pause;
+      *(outbuffer + offset + 0) = (u_pause.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->pause);
+      union {
+        bool real;
+        uint8_t base;
+      } u_cancel;
+      u_cancel.real = this->cancel;
+      *(outbuffer + offset + 0) = (u_cancel.base >> (8 * 0)) & 0xFF;
+      offset += sizeof(this->cancel);
       return offset;
     }
 
     virtual int deserialize(unsigned char *inbuffer)
     {
       int offset = 0;
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_serialID;
+      u_serialID.base = 0;
+      u_serialID.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_serialID.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_serialID.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_serialID.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->serialID = u_serialID.real;
+      offset += sizeof(this->serialID);
+      union {
+        bool real;
+        uint8_t base;
+      } u_manual;
+      u_manual.base = 0;
+      u_manual.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->manual = u_manual.real;
+      offset += sizeof(this->manual);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_manualDrive;
+      u_manualDrive.base = 0;
+      u_manualDrive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_manualDrive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_manualDrive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_manualDrive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->manualDrive = u_manualDrive.real;
+      offset += sizeof(this->manualDrive);
+      union {
+        int32_t real;
+        uint32_t base;
+      } u_manualTurn;
+      u_manualTurn.base = 0;
+      u_manualTurn.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_manualTurn.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_manualTurn.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_manualTurn.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->manualTurn = u_manualTurn.real;
+      offset += sizeof(this->manualTurn);
       union {
         float real;
         uint32_t base;
@@ -159,16 +259,24 @@ namespace command2ros
       union {
         bool real;
         uint8_t base;
-      } u_stop;
-      u_stop.base = 0;
-      u_stop.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      this->stop = u_stop.real;
-      offset += sizeof(this->stop);
+      } u_pause;
+      u_pause.base = 0;
+      u_pause.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->pause = u_pause.real;
+      offset += sizeof(this->pause);
+      union {
+        bool real;
+        uint8_t base;
+      } u_cancel;
+      u_cancel.base = 0;
+      u_cancel.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      this->cancel = u_cancel.real;
+      offset += sizeof(this->cancel);
      return offset;
     }
 
     const char * getType(){ return "command2ros/MovementCommand"; };
-    const char * getMD5(){ return "6cec864cca46ad9a22762b3b64dcff7b"; };
+    const char * getMD5(){ return "313c15045e6d52239964373121ab45c4"; };
 
   };
 

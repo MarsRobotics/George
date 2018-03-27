@@ -14,6 +14,7 @@ from states.StartState import StartState
 from states.ScanDigState import ScanDigState
 from states.ScanDumpState import ScanDumpState
 from states.MoveState import MoveState
+from states.ManualMoveState import ManualMoveState
 from states.DockingBinState import DockingBinState
 from states.DigState import DigState
 from states.DumpState import DumpState
@@ -51,7 +52,7 @@ class StateMachine():
 
         #use to update the next command and send to arduino 
         cr = CommandRobot()
-        self.currentState.run(cr)
+        #self.currentState.run(cr)
         cr.sendCommand()     
         #set the current state to the specified next state
         self.currentState =  currentState.nextState
