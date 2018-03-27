@@ -7,5 +7,8 @@ class DumpState(State):
         self.transitionReady = False
 
     #implementation for each state: overridden
-    def run(self):
-        print("\n>run() not implemented\n")
+    def run(self, cr):
+        #new movement data with command dump set to true
+        dump_data = MovementData()
+        dump_data.dump = True
+        cr.setCommand(dump_data)
