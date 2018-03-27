@@ -16,6 +16,6 @@ class MovementData:
 
         self.serialID = 0
         self.cancel = False
-        self.forward = 0
-        self.turn = 0
+        self.manualDrive = 0
+        self.manualTurn = 0
         return
