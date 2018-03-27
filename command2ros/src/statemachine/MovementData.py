@@ -12,4 +12,10 @@ class MovementData:
         self.packin = False     #ending sequence, wheels roll in so tucked under
         self.eStop = False      
         self.stop = False
+
+
+        self.serialID = 0
+        self.cancel = False
+        self.forward = 0
+        self.turn = 0
         return
