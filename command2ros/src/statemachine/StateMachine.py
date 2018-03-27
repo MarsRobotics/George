@@ -33,6 +33,8 @@ class StateMachine():
         self.DockingBinState = DockingBinState()
         self.DumpState = DumpState()
         self.DigState = DigState()
+        
+        self.ManualMoveState = ManualMoveState()
 
         #set current state
         self.currentState = self.StartState
