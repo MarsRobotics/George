@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import sys
 sys.path.append("/home/pi/ros_catkin_ws/src/command2ros/src/statemachine/")
 
@@ -8,7 +9,10 @@ import roslib
 roslib.load_manifest('command2ros')
 
 from command2ros.msg import MovementCommand
+from command2ros.msg import ScanCommand
+from command2ros.msg import ArduinoMessage
 from CommandRobot import CommandRobot
+from FeedbackHandler import FeedbackHandler
 
 from states.StartState import StartState
 from states.ScanDigState import ScanDigState
@@ -45,34 +49,62 @@ class StateMachine():
         #transition criteria
         self.inExcavationZone = False   #ScanDigState to DigState
         self.hopperEmpty = True         #MoveState to ScanDigState if true, otherwise ScanDumpState
-        self.inDumpZone = False         #ScanDumpState to DockingBinState        
+        self.inDumpZone = False         #ScanDumpState to DockingBinState               
 
     #control program
     def startRobot(self):
+        end = False
+        scanID = 0
+        moveID = 0
         print("robot is starting")
-        pub = self.rosSetup()  
-        print("ros has been set up")         
-        self.dataDistributorSetup(pub) 
+        movementPub, scanPub = self.rosSetup()  
+        print("ros has been set up")  
+        feedbackHandler = FeedbackHandler()
+        feedbackHandler.start()
+        print("feedback handler set up")       
+        dd = self.dataDistributorSetup(movementPub) 
         print("data distributor to send commands is set up") 
 
-        #use to update the next command and send to arduino 
+        #use to update the next command and send to arduino mega
         cr = CommandRobot()
         print("command robot is ready to command")
 
-        while True:
+        print("Starting in manual command mode")
+
+        while(True):
+            scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID)
+            
+            if self.currentState.autonomousMode:
+                print("switching from manual mode to autonomous mode")
+                self.currentState = self.StartState 
+                break  
+            elif self.currentState.endProgram:
+                end = True
+                print("ending the program")
+                break
+
+        while not end:
             print("run the next state")
-            self.currentState.run(cr)
+            self.currentState.run(cr)    
+
             print("send command")
-            cr.sendCommand()     
+            cr.sendCommand()       
+
             #set the current state to the specified next state
             next = self.currentState.nextState
-            self.setNext(next)
+            self.setNext(next) 
+
+        if end:         
+            print("command robot stopped")    
+            dd.join()            
+            print("data distributor stopped")
+            time.sleep(2)
+            exit()
+        return
 
     #set next state
     def setNext(self, next):
-        if next == self.ManualMoveState.name:
-            self.currentState = self.ManualMoveState
-        elif next == self.MoveDigState.name:
+        if next == self.MoveDigState.name:
             self.currentState = self.MoveDigState
         elif next == self.MoveDumpState.name:
             self.currentState = self.MoveDumpState
@@ -92,13 +124,15 @@ class StateMachine():
         #handles connection to client to receive commands
         dataDist = DataDistributor(pub)
         dataDist.start()
+        return dataDist
 
     #ros node for program and publisher for movement commands
     def rosSetup(self):
         #create ros publisher to update/send data
-        pub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
+        movementPub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
+        scanPub = rospy.Publisher('Scan', ScanCommand, queue_size=10)
         rospy.init_node('command2ros', anonymous=True)
-        return pub
+        return (movementPub, scanPub)
 
 #PROGRAM ENTRY
 if __name__ == "__main__":

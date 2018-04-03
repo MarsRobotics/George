@@ -18,4 +18,6 @@ class MovementData:
         self.manualDrive = 0
         self.manualTurn = 0
         self.manual = False
+
+        self.endProgram = False #not part of MovementCommand.msg for publishing
         return

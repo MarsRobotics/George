@@ -5,6 +5,7 @@ try:
 except ImportError:
     import pickle
     
+import time
 import socket 
 from socket import error as socketError
 from MovementData import MovementData
@@ -20,25 +21,27 @@ class CommandRobot:
     def __init__(self):
         self.HOST = "127.0.0.1"
         self.PORT = 10000 
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.HOST, self.PORT))
+        self.sock = s
         self.lastData = MovementData()
-        self.currentData = MovementData()        
+        self.currentData = MovementData() 
         return
-    
+
+    def stop(self):
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+        print("command robot is closed")
+
     #communication with the DataDistributor
-    def sendCommand(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            #connect to host
-            s.connect((self.HOST,self.PORT))
-
-            #receive last data sent
-            try:
-                receiveData(s)
-            except socket.error:
-                s.close()
-                exit()
-
-            #send new command data
-            sendData(s, self.currentData)
+    def sendCommand(self):        
+        #send new command data
+        sendData(self.sock, self.currentData)
+        time.sleep(2)
+        if self.currentData.endProgram:
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+            print("command robot is closed")
 
     #assign a new command for the robot
     def setCommand(self, command):
@@ -53,4 +56,5 @@ class CommandRobot:
         self.currentData.manualDrive = command.manualDrive
         self.currentData.manualTurn = command.manualTurn
         self.currentData.serialID = command.serialID
+        self.currentData.endProgram = command.endProgram
 

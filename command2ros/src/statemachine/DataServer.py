@@ -22,13 +22,14 @@ class DataDistributor(threading.Thread):
         self.data = MovementData()      
         self.pub = pub  
         threading.Thread.__init__(self)
+        self._stop_event = threading.Event()        
         return
 
     #create connection to receive commands
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(("127.0.0.1", 10000)) #George
-        server.listen(1)                  #accept only one connection        
+        server.listen(5)                  #accept only one connection        
 
         #begin publisher mechanism
         dataServer = DataServer(self.pub)
@@ -40,46 +41,44 @@ class DataDistributor(threading.Thread):
         #begin receiving commands
         self.getCommands(dataServer, clientSocket, server)              
         return
+
+    #prepare thread to finish execution
+    def stop(self):
+        self._stop_event.set()
     
     #receive new movement commands 
     def getCommands(self, dataServer, clientSocket, server):
         print("Running")
         sendRate = rospy.Rate(10) #10 Hz
         try:
-            while not rospy.is_shutdown(): 
-                clientSocket.setblocking(1)
-
-                #send last movement data to the client
-                sendData(clientSocket, self.data)
-                sendRate.sleep()
-
+            while not rospy.is_shutdown():  
                 try:
-                    clientSocket.setblocking(0)
+                    clientSocket.setblocking(1)
 
                     #get new command
                     newCommand = receiveData(clientSocket)
 
-                    #add command to execution queue
-                    dataServer.addCommand(newCommand)                   
+                    if newCommand.endProgram:
+                        dataServer.stop()                        
+                        dataServer.join()
+                        print("data server is closed")                        
+                        clientSocket.close()
+                        print("datadistributor: clientsocket closed")
+                        server.shutdown(socket.SHUT_RDWR)
+                        server.close()
+                        print("datadistributor: server closed") 
+                        return
+                    else:
+                        #add command to execution queue
+                        dataServer.addCommand(newCommand)                   
                 except socket.error:
-                    continue                
-                
-                #e exits program, any other character continues 
-                '''
-                if sys.stdin.read(1).lower() == 'e':
-                    clientSocket.shutdown(socket.SHUT_RDWR)
-                    clientSocket.close()
-                    server.shutdown(socket.SHUT_RDWR)
-                    server.close()
-                    dataServer.stop()
-                    exit()
-                '''
+                    continue                                                
         except socket.error: 
             #lost connection, stop robot
             newCommand = MovementData()
             newCommand.eStop = True
             dataServer.addCommand(newCommand)
-            return
+            return                       
         return
 
 """
@@ -113,6 +112,7 @@ class DataServer(threading.Thread):
         while True:
             #let thread terminate
             if self._stop_event.is_set():
+                print("dataserver is closed")
                 return
 
             #publish as long as there is a command to publish
