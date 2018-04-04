@@ -1,4 +1,6 @@
 from states.State import State
+from LidarCommands import raspi_threads as rasp
+from LidarCommands.constants import *
 from DataTransferProtocol import receiveData, sendData
 from MovementData import MovementData
 from ManualData import ManualData
@@ -10,7 +12,7 @@ class ManualMoveState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ManualMoveState", "ManualMoveState")
-        self.HOST = "192.168.1.135"
+        self.HOST = "192.168.1.145"
         self.PORT = 20000
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("attempt to connect manual")
@@ -19,19 +21,21 @@ class ManualMoveState(State):
         self.sock = s
         self.autonomousMode = False
         self.endProgram = False
+        self.distance = []
+        self.crossSection = []
         return
 
     #implementation for each state: overridden
-    def run(self, cr, pub, scanID, moveID, megaProgress):           
+    def run(self, cr, pub, scanID, moveID):           
+    #def run(self, pub, scanID, moveID):           
         try:
-            self.sock.setblocking(0) 
-            sendData(self.sock, megaProgress)
             self.sock.setblocking(1)            
             manualCommand = receiveData(self.sock)
             print("received new command")            
 
             if manualCommand.endProgram:
                 c = MovementData()
+                c.manual = True
                 c.endProgram = manualCommand.endProgram            
                 cr.setCommand(c)                
                 cr.sendCommand()  
@@ -48,14 +52,23 @@ class ManualMoveState(State):
                 print("manual state closed by switch to autonomous")
             elif(manualCommand.forwardScan or manualCommand.backwardScan):
                 if manualCommand.forwardScan:
+                    #tell motor to get into position and begin to move for scanning
                     pub.publish(scan=True, serialID=scanID)
-                    print("Published command to scan forward")                    
+                    print("Published command to scan forward")  
+                    
+                    #begin scanning lidar
+                    distance, crossSection = rasp.scan()                                                                          
                 elif manualCommand.backwardScan:
-                    pub.publish(scan=False, serialID=scanID) 
-                    print("Published command to scan backwards")                    
+                    #tell motor to get into position and begin to move for scanning
+                    pub.publish(scan=False, serialID=scanID)                     
+                    print("Published command to scan backwards")   
+
+                    #begin scanning lidar
+                    distance, crossSection = rasp.scan()
                 scanID += 1   
-            else:
+            else:                
                 c = MovementData()
+                c.manual = True    
                 c.manualDrive = manualCommand.manualDrive
                 c.manualTurn = manualCommand.manualTurn
                 c.dig = manualCommand.dig
@@ -63,11 +76,13 @@ class ManualMoveState(State):
                 c.packin = manualCommand.packin
                 c.cancel = manualCommand.stop
                 c.serialID = moveID
+                c.driveDist = manualCommand.drive
+                c.turn = manualCommand.turn
                 moveID += 1
             
                 cr.setCommand(c)
                 print("send movement command to robot")
-                cr.sendCommand()                   
+                cr.sendCommand()                            
         except socket.error:
             c = MovementData()
             c.endProgram = True           

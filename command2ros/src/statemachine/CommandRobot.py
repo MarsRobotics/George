@@ -56,5 +56,6 @@ class CommandRobot:
         self.currentData.manualDrive = command.manualDrive
         self.currentData.manualTurn = command.manualTurn
         self.currentData.serialID = command.serialID
+        self.currentData.manual = command.manual
         self.currentData.endProgram = command.endProgram
 

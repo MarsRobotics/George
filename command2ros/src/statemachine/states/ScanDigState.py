@@ -1,4 +1,6 @@
 from states.State import State
+from LidarCommands import raspi_threads as rasp
+from LidarCommands.constants import *
 
 class ScanDigState(State):
     #init attributes of state
