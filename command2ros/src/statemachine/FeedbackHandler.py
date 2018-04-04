@@ -10,7 +10,8 @@ class FeedbackHandler(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.messageQueue = []
-        return    
+        self.progressMessage = "test"
+        return 
 
     def run(self):
         self.listener()
@@ -26,6 +27,8 @@ class FeedbackHandler(threading.Thread):
         feedback.errorDumping = data.errorDumping
         feedback.errorTurning = data.errorTurning
         self.messageQueue.append(feedback)        
+
+        self.progressMessage = feedback.progress
 
     def listener(self):        
         rospy.Subscriber("ArduinoFeedback", ArduinoMessage, self.callback)

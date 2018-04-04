@@ -72,7 +72,7 @@ class StateMachine():
         print("Starting in manual command mode")
 
         while(True):
-            scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID)
+            scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID, feedbackHandler.progressMessage)            
             
             if self.currentState.autonomousMode:
                 print("switching from manual mode to autonomous mode")

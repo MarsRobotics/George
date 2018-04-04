@@ -1,5 +1,5 @@
 from states.State import State
-from DataTransferProtocol import receiveData
+from DataTransferProtocol import receiveData, sendData
 from MovementData import MovementData
 from ManualData import ManualData
 from ScanData import ScanData
@@ -22,11 +22,13 @@ class ManualMoveState(State):
         return
 
     #implementation for each state: overridden
-    def run(self, cr, pub, scanID, moveID):           
+    def run(self, cr, pub, scanID, moveID, megaProgress):           
         try:
+            self.sock.setblocking(0) 
+            sendData(self.sock, megaProgress)
             self.sock.setblocking(1)            
             manualCommand = receiveData(self.sock)
-            print("received new command")
+            print("received new command")            
 
             if manualCommand.endProgram:
                 c = MovementData()
