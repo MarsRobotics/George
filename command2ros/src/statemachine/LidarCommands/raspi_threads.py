@@ -130,7 +130,7 @@ class LidarThreads():
     def produce(self, dataQueue, stop_event):
         counter = 0
         angle = -1
-        for i in range (0,1):#number of slices to scan along y-axis (moving servo motor)
+        for i in range (0,2):#number of slices to scan along y-axis (moving servo motor)
 
                 # wait for the Queue to empty
                 while dataQueue.qsize() > 0:
