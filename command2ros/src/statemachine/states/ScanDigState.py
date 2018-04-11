@@ -1,6 +1,11 @@
 from states.State import State
+<<<<<<< HEAD
 from states.State import MoveDigState
 from MovementData import MovementData
+=======
+from LidarCommands import raspi_threads as rasp
+from LidarCommands.constants import *
+>>>>>>> c06ff52c9b406d9f208cceb659fa1edea3359ece
 
 class ScanDigState(State):
     #init attributes of state

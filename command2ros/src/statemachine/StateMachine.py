@@ -11,6 +11,7 @@ roslib.load_manifest('command2ros')
 from command2ros.msg import MovementCommand
 from command2ros.msg import ScanCommand
 from command2ros.msg import ArduinoMessage
+from command2ros.msg import Feedback
 from CommandRobot import CommandRobot
 from FeedbackHandler import FeedbackHandler
 
@@ -58,8 +59,8 @@ class StateMachine():
     #control program
     def startRobot(self):
         end = False
-        scanID = 0
-        moveID = 0
+        scanID = 1
+        moveID = 1
         print("robot is starting")
         movementPub, scanPub = self.rosSetup()  
         print("ros has been set up")  
@@ -76,7 +77,8 @@ class StateMachine():
         print("Starting in manual command mode")
 
         while(True):
-            scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID, feedbackHandler.progressMessage)            
+            scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID)            
+            #scanID, moveID = self.currentState.run(scanPub, scanID, moveID)            
             
             if self.currentState.autonomousMode:
                 print("switching from manual mode to autonomous mode")

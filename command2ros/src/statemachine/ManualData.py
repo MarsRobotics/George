@@ -15,5 +15,7 @@ class ManualData:
         self.stop = False
         self.autonomousMode = False
         self.endProgram = False
+        self.drive = 0
+        self.turn = 0
         return
 

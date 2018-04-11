@@ -2,6 +2,7 @@
 
 import rospy
 from command2ros.msg import ArduinoMessage
+from command2ros.msg import Feedback
 from FeedbackData import FeedbackData
 import threading
 
@@ -10,7 +11,6 @@ class FeedbackHandler(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.messageQueue = []
-        self.progressMessage = "test"
         return 
 
     def run(self):
@@ -27,8 +27,6 @@ class FeedbackHandler(threading.Thread):
         feedback.errorDumping = data.errorDumping
         feedback.errorTurning = data.errorTurning
         self.messageQueue.append(feedback)        
-
-        self.progressMessage = feedback.progress
 
     def listener(self):        
         rospy.Subscriber("ArduinoFeedback", ArduinoMessage, self.callback)
