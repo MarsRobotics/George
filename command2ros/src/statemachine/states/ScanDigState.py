@@ -1,9 +1,12 @@
 from states.State import State
+from states.State import MoveDigState
+from MovementData import MovementData
 
 class ScanDigState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ScanDigState", "MoveDigState")
+        self.MoveDigState = None
 
     #implementation for each state: overridden
     def run(self):
@@ -20,3 +23,6 @@ class ScanDigState(State):
 
         #B: create map for AI
         #B: interpret map for AI & get move instructions
+
+    def setMoveDig(self, digState):
+        self.MoveDigState = digState

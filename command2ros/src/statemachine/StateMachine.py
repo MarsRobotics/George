@@ -46,6 +46,10 @@ class StateMachine():
         #set current state
         self.currentState = self.ManualMoveState #self.StartState
 
+        #allow scan states to set movement when time to move
+        self.ScanDigState.setMoveDig(self.MoveDigState)
+        self.ScanDumpState.setMoveDump(self.MoveDumpState)
+
         #transition criteria
         self.inExcavationZone = False   #ScanDigState to DigState
         self.hopperEmpty = True         #MoveState to ScanDigState if true, otherwise ScanDumpState

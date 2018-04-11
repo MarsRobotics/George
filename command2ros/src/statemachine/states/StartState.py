@@ -1,4 +1,5 @@
 from states.State import State
+from MovementData import MovementData
 
 class StartState(State):
     #init attributes of state
