@@ -7,5 +7,5 @@ class DockingBinState(State):
         super().__init__("DockingBinState", "DumpState")
 
     #implementation for each state: overridden
-    def run(self):
+    def run(self, cr, id):
         print("\n>run() not implemented\n")

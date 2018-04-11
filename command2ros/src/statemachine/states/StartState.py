@@ -7,5 +7,5 @@ class StartState(State):
         super().__init__("StartState", "ScanDigState")
 
     #implementation for each state: overridden
-    def run(self,cr):
+    def run(self, cr, id):
         print("\n>run() not implemented\n")

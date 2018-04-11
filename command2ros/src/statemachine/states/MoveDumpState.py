@@ -6,12 +6,15 @@ class MoveDumpState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("MoveDumpState", "ScanDumpState")
-        self.nextMove = MovementData()
+        self.moveCommand = MovementData()
 
     #implementation for each state: overridden
-    def run(self):
-        print("\n>run() not implemented\n")
+    def run(self, cr, id):
+        self.moveCommand.serialID = id
+        cr.setCommand(self.moveCommand)
+        print("send command")
+        cr.sendCommand()
 
     #set the next move for the robot
     def setNextMove(self, newMove):
-        self.nextMove = newMove
+        self.moveCommand = newMove

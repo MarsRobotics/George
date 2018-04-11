@@ -6,11 +6,14 @@ class MoveDigState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("MoveDigState", "ScanDigState")
-        self.nextMove = MovementData()
+        self.moveCommand = MovementData()
 
     #implementation for each state: overridden
-    def run(self, moveInstructions):
-        print("\n>run() not implemented\n")
+    def run(self, cr, id):
+        self.moveCommand.serialID = id
+        cr.setCommand(self.moveCommand)
+        print("send command")
+        cr.sendCommand()    
 
-    def setNextMove(self, newMove):
-        self.nextMove = newMove
+    def setNextMove(self, newMove):        
+        self.moveCommand = newMove
