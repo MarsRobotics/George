@@ -1,4 +1,5 @@
 from states.State import State
+from MovementData import MovementData
 
 class DumpState(State):
     #init attributes of state
@@ -7,8 +8,13 @@ class DumpState(State):
         self.transitionReady = False
 
     #implementation for each state: overridden
-    def run(self, cr):
+    def run(self, cr, id):
         #new movement data with command dump set to true
         dump_data = MovementData()
         dump_data.dump = True
-        cr.setCommand(dump_data)
+        dump_data.serialID = id
+        id += 1
+        cr.setCommand(dump_data)        
+        print("send command")
+        cr.sendCommand()       
+        return id

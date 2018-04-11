@@ -47,6 +47,10 @@ class StateMachine():
         #set current state
         self.currentState = self.ManualMoveState #self.StartState
 
+        #allow scan states to set movement when time to move
+        self.ScanDigState.setMoveDig(self.MoveDigState)
+        self.ScanDumpState.setMoveDump(self.MoveDumpState)
+
         #transition criteria
         self.inExcavationZone = False   #ScanDigState to DigState
         self.hopperEmpty = True         #MoveState to ScanDigState if true, otherwise ScanDumpState
@@ -65,6 +69,9 @@ class StateMachine():
         print("feedback handler set up")       
         dd = self.dataDistributorSetup(movementPub) 
         print("data distributor to send commands is set up") 
+
+        self.ScanDigState.setPub(scanPub)
+        self.ScanDumpState.setPub(scanPub)
 
         #use to update the next command and send to arduino mega
         cr = CommandRobot()
@@ -87,10 +94,10 @@ class StateMachine():
 
         while not end:
             print("run the next state")
-            self.currentState.run(cr)    
-
-            print("send command")
-            cr.sendCommand()       
+            if self.currentState.name == "ScanDigState" or self.currentState.name == "ScanDumpState":
+                scanID = self.currentState.run(scanID)
+            else:
+                moveID = self.currentState.run(cr, moveID)
 
             #set the current state to the specified next state
             next = self.currentState.nextState
