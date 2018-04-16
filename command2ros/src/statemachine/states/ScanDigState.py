@@ -1,5 +1,5 @@
 from states.State import State
-from states.State import MoveDigState
+#from states.MoveDigState import MoveDigState
 from MovementData import MovementData
 from LidarCommands import raspi_threads as rasp
 from LidarCommands.constants import *

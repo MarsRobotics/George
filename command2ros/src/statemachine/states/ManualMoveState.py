@@ -12,7 +12,7 @@ class ManualMoveState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ManualMoveState", "ManualMoveState")
-        self.HOST = "192.168.1.113"
+        self.HOST = "192.168.1.136"
         self.PORT = 20000
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("attempt to connect manual")
@@ -53,18 +53,36 @@ class ManualMoveState(State):
             elif(manualCommand.forwardScan or manualCommand.backwardScan):
                 if manualCommand.forwardScan:
                     #tell motor to get into position and begin to move for scanning
-                    pub.publish(scan=True, serialID=scanID)
-                    print("Published command to scan forward")  
+                    #pub.publish(scan=True, serialID=scanID)
+                    #print("Published command to scan forward")  
                     
                     #begin scanning lidar
-                    distance, crossSection = rasp.scan()                                                                          
+                    z, distance = rasp.scan(pub, True)  
+
+                    if z != None:
+                        print("distance")    
+                        filename = "LiDAR_Scans/forward_LiDAR_distances_" + str(scanID) + ".txt"
+                        with open(filename,"w") as f:
+                            for d in distance:
+                                p = str(d) + ", "
+                                f.write(p)                            
+                        print("done writing LiDAR data")
                 elif manualCommand.backwardScan:
                     #tell motor to get into position and begin to move for scanning
-                    pub.publish(scan=False, serialID=scanID)                     
-                    print("Published command to scan backwards")   
+                    #pub.publish(scan=False, serialID=scanID)                     
+                    #print("Published command to scan backwards")   
 
                     #begin scanning lidar
-                    distance, crossSection = rasp.scan()
+                    z, distance = rasp.scan(pub, False)
+
+                    if z != None:
+                        print("distance")    
+                        filename = "LiDAR_Scans/backwards_LiDAR_distances_" + str(scanID) + ".txt"
+                        with open(filename,"w") as f:
+                            for d in distance:
+                                p = str(d) + ", "
+                                f.write(p)                            
+                        print("done writing LiDAR data")
                 scanID += 1   
             else:                
                 c = MovementData()

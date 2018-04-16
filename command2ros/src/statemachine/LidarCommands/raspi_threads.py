@@ -19,9 +19,13 @@ import time
 ##############################
 #  PROGRAM MAIN ENTRY POINT  #
 ##############################
-def scan():
-    lt = LidarThreads(debug=False)
+def scan(pub, scanDir):
+    pub.publish(scan=scanDir, serialID=scanID)
+    print("Published command to scan forward")  
 
+    lt = LidarThreads(debug=False)
+    if lt == None:
+        return (None, None)
     # make the first thread for reading LIDAR data
     debugPrint("Starting", ROSTA)
     th1_stop = threading.Event()
@@ -110,7 +114,7 @@ class LidarThreads():
             self.socket.connect(("192.168.0.10", 10940))
         except socket.timeout as e:
             debugPrint("I can't connect. Exiting.", SOCKET_MSG)
-            exit(-1)
+            return None
 
         # dataQueue is a Queue of strings
         # each string representing a slice (scan)
@@ -130,24 +134,20 @@ class LidarThreads():
     def produce(self, dataQueue, stop_event):
         counter = 0
         angle = -1
-        for i in range (0,2):#number of slices to scan along y-axis (moving servo motor)
-
+        start = time.time()
+        for i in range (0,1):#number of slices to scan along y-axis (moving servo motor)
                 # wait for the Queue to empty
                 while dataQueue.qsize() > 0:
                   pass
                 angle = angle+1
                 # get the starting theta angle
                 self.slitAngle = START_ANGLE
-
                 # get data from the user
                 # print "\n>>> Rotate LiDAR to {} degrees".format(ang)
                 # inp = raw_input(">>> Press enter when ready to make a scan\n")
                 # if inp == "":
-                start = time.time()
                 # send scan request to the LIDAR
                 self.socket.sendall(self.command)
-                end = time.time()
-                debugPrint("Time difference: {}".format(end-start), ROSTA)
                 #astr ='MD'+'0180'+'0900'+'00'+'0'+'01'+'\n'
                 #self.socket.sendall(astr.encode())
                 #sleep(0.1)
@@ -174,6 +174,8 @@ class LidarThreads():
                             debugPrint("Data Queue is full.", SOCKET_MSG)
                             continue
                     counter += 1.0
+        end = time.time()
+        debugPrint("Time difference: {}".format(end-start), ROSTA)
 
     ##
     # consume
@@ -199,7 +201,7 @@ class LidarThreads():
         emptied = False
 		
         index = 0
-
+        start = time.time()
         while not stop_event.is_set():
 
             try:
@@ -245,6 +247,8 @@ class LidarThreads():
                 continue
 
         self.processedDataArrays = (xLines, yLines, zLines, phiLines, thetaLines, distLines)
+        end = time.time()
+        debugPrint("Time difference: {}".format(end-start), ROSTA)
 
     ##
     # exit
