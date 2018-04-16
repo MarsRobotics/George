@@ -5,6 +5,5 @@ class State():
         self.nextState = nextState
 
     #each state must implement run()
-    def run(self):
+    def run(self, cr, scanID, moveID):
         print(self.name)
-        print("\n>run() not implemented\n")

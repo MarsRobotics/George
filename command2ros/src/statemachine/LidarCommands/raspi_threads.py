@@ -19,7 +19,7 @@ import time
 ##############################
 #  PROGRAM MAIN ENTRY POINT  #
 ##############################
-def scan(pub, scanDir):
+def scan(pub, scanDir, scanID):
     pub.publish(scan=scanDir, serialID=scanID)
     print("Published command to scan forward")  
 

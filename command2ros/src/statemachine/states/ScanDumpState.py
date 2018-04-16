@@ -15,21 +15,31 @@ class ScanDumpState(State):
     def setPub(self, publisher):
         self.pub = publisher
 
-    #implementation for each state: overridden
-    def run(self, id):    
+    '''
+    Run for ScanDumpState:  Scan the environment for the collection bin and 
+                create path towards the collection bin, moving around 
+                obstacles. When the robot is within the maxBinDist range,
+                set the next transition to the DockingBinState.
+
+    cr      CommandRobot allows commands to be published to the Mega
+    scanID  ID number for the message to be published to the Scan topic
+    moveID  ID number for the message to be published to the MovementCommand topic
+    '''
+    def run(self, cr, scanID, moveID):    
+        self.nextState = "MoveDumpState"
         if self.distFromBin <= maxBinDist:
-            self.binCheck(id)
+            self.binCheck(scanID)
 
         moveCommand = MovementData()
         self.moveDumpState.setNextMove(moveCommand)
 
+        return (scanID+1, moveID)
+
+    #keep MoveDumpState to update movement commands
     def setMoveDump(self, dumpState):
         self.moveDumpState = dumpState
 
+    #check if the robot is close enough to begin docking
     def binCheck(self, id):        
-        #tell motor to get into position and begin to move for scanning
-        self.pub.publish(scan=True, serialID=id)                     
-        print("Published command to scan forwards")   
-
-        #begin scanning lidar
-        distance, crossSection = rasp.scan() 
+        crossSection, distance = rasp.scan(self.pub, True, id) 
+        #set next state to "DockingBinState" if close enough

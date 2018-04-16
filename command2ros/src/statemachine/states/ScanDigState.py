@@ -1,5 +1,5 @@
 from states.State import State
-#from states.MoveDigState import MoveDigState
+from states.MoveDigState import MoveDigState
 from MovementData import MovementData
 from LidarCommands import raspi_threads as rasp
 from LidarCommands.constants import *
@@ -16,12 +16,20 @@ class ScanDigState(State):
     def setPub(self, publisher):
         self.pub = publisher
 
-    #implementation for each state: overridden
-    def run(self, id):
-        print("\n>run() not implemented\n")
+    '''
+    Run for ScanDigState: Scan the environment to move the robot to the 
+            excavation site, avoid obstacles. When the robot is past the 
+            digSiteDist then check that the robot is in the excavation
+            site and set the next transition for the DigState
 
+    cr      CommandRobot allows commands to be published to the Mega
+    scanID  ID number for the message to be published to the Scan topic
+    moveID  ID number for the message to be published to the MovementCommand topic
+    '''
+    def run(self, cr, scanID, moveID):
+        self.nextState = "MoveDigState"
         if self.movedSoFar >= self.digSiteDist:
-            self.binCheck(id)
+            self.binCheck(scanID)
 
         moveCommand = MovementData()
         self.moveDigState.setNextMove(moveCommand)
@@ -37,14 +45,14 @@ class ScanDigState(State):
 
         #B: create map for AI
         #B: interpret map for AI & get move instructions
+        return (scanID+1, moveID)
 
+    #keep instance of MoveDigState to update next move
     def setMoveDig(self, digState):
         self.moveDigState = digState    
 
+    #check if the robot is in the excavation zone
     def binCheck(self, id):        
-        #tell motor to get into position and begin to move for scanning
-        self.pub.publish(scan=False, serialID=id)                     
-        print("Published command to scan backwards")   
-
         #begin scanning lidar
-        distance, crossSection = rasp.scan() 
+        crossSection, distance = rasp.scan(self.pub, False, id) 
+        #if in excavation site set the next state to DigState

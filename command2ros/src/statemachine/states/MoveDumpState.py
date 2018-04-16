@@ -1,5 +1,4 @@
 from states.State import State
-from states.ScanDumpState import ScanDumpState
 from MovementData import MovementData
 
 class MoveDumpState(State):
@@ -8,12 +7,20 @@ class MoveDumpState(State):
         super().__init__("MoveDumpState", "ScanDumpState")
         self.moveCommand = MovementData()
 
-    #implementation for each state: overridden
-    def run(self, cr, id):
-        self.moveCommand.serialID = id
+    '''
+    Run for MoveDumpState:  Send movement command set by the ScanDumpState
+            to the Mega with updated ID
+
+    cr      CommandRobot allows commands to be published to the Mega
+    scanID  ID number for the message to be published to the Scan topic
+    moveID  ID number for the message to be published to the MovementCommand topic
+    '''
+    def run(self, cr, scanID, moveID):
+        self.moveCommand.serialID = moveID
         cr.setCommand(self.moveCommand)
         print("send command")
         cr.sendCommand()
+        return (scanID, moveID+1)
 
     #set the next move for the robot
     def setNextMove(self, newMove):

@@ -68,43 +68,43 @@ class StateMachine():
         feedbackHandler.start()
         print("feedback handler set up")       
         dd = self.dataDistributorSetup(movementPub) 
-        print("data distributor to send commands is set up") 
-
-        self.ScanDigState.setPub(scanPub)
-        self.ScanDumpState.setPub(scanPub)
+        print("data distributor to send commands is set up")         
 
         #use to update the next command and send to arduino mega
         cr = CommandRobot()
         print("command robot is ready to command")
 
-        print("Starting in manual command mode")
+        if self.currentState.name == "ManualMoveState":
+            print("Starting in manual command mode")
 
-        while(True):
-            scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID)            
-            #scanID, moveID = self.currentState.run(scanPub, scanID, moveID)            
-            
-            if self.currentState.autonomousMode:
-                print("switching from manual mode to autonomous mode")
-                self.currentState = self.StartState 
-                break  
-            elif self.currentState.endProgram:
-                end = True
-                print("ending the program")
-                break
+            while(True):
+                scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID)           
+                
+                if self.currentState.autonomousMode:
+                    print("switching from manual mode to autonomous mode")
+                    self.currentState = self.StartState 
+                    break  
+                elif self.currentState.endProgram:
+                    end = True
+                    print("ending the program")
+                    break
 
-        while not end:
-            print("run the next state")
-            if self.currentState.name == "ScanDigState" or self.currentState.name == "ScanDumpState":
-                scanID = self.currentState.run(scanID)
-            else:
-                moveID = self.currentState.run(cr, moveID)
+        if self.currentState.name == "StartState":
+            scanID, moveID = self.currentState.run(cr, scanID, moveID)
+
+            #set the current state to the specified next state
+            next = self.currentState.nextState
+            self.setNext(next) 
+
+        while not end:            
+            print("Run " + self.currentState.name)
+            scanID, moveID = self.currentState.run(cr, scanID, moveID)
 
             #set the current state to the specified next state
             next = self.currentState.nextState
             self.setNext(next) 
 
         if end:         
-            print("command robot stopped")    
             dd.join()            
             print("data distributor stopped")
             time.sleep(2)
@@ -141,6 +141,11 @@ class StateMachine():
         movementPub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
         scanPub = rospy.Publisher('Scan', ScanCommand, queue_size=10)
         rospy.init_node('command2ros', anonymous=True)
+
+        self.ScanDigState.setPub(scanPub)
+        self.ScanDumpState.setPub(scanPub)
+        self.ManualMoveState.setPub(scanPub)
+        self.StartState.setPub(scanPub)
         return (movementPub, scanPub)
 
 #PROGRAM ENTRY
