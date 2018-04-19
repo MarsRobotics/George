@@ -12,7 +12,7 @@ class ManualMoveState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ManualMoveState", "ManualMoveState")
-        self.HOST = "192.168.1.136"         #laptop IP
+        self.HOST = "192.168.1.137"         #laptop IP
         self.PORT = 20000                   #communication port
 
         #connect to laptop (note: laptop program is server so must start laptop program first)
@@ -61,12 +61,8 @@ class ManualMoveState(State):
             #scan LiDAR
             elif(manualCommand.forwardScan or manualCommand.backwardScan):
                 if manualCommand.forwardScan:
-                    #tell motor to get into position and begin to move for scanning
-                    #pub.publish(scan=True, serialID=scanID)
-                    #print("Published command to scan forward")  
-                    
-                    #begin scanning lidar
-                    z, distance = rasp.scan(self.pub, True)  
+                    #tell motor to get into position and begin to move for scanning   
+                    scanID, z, distance = rasp.scan(self.pub, True, scanID)  
 
                     if z != None:
                         print("distance")    
@@ -78,11 +74,7 @@ class ManualMoveState(State):
                         print("done writing LiDAR data")
                 elif manualCommand.backwardScan:
                     #tell motor to get into position and begin to move for scanning
-                    #pub.publish(scan=False, serialID=scanID)                     
-                    #print("Published command to scan backwards")   
-
-                    #begin scanning lidar
-                    z, distance = rasp.scan(self.pub, False)
+                    scanID, z, distance = rasp.scan(self.pub, False, scanID)
 
                     if z != None:
                         print("distance")    

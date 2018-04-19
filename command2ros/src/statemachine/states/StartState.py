@@ -27,7 +27,7 @@ class StartState(State):
         cr.sendCommand()
 
         print("Scan collection bin")
-        rasp.scan(self.pub, False, scanID)
+        scanID, z, distance = rasp.scan(self.pub, False, scanID)
         return (scanID, moveID)
 
     #keep copy of puublisher for scan topic

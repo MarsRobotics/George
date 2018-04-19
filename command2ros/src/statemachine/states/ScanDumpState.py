@@ -28,7 +28,7 @@ class ScanDumpState(State):
     def run(self, cr, scanID, moveID):    
         self.nextState = "MoveDumpState"
         if self.distFromBin <= maxBinDist:
-            self.binCheck(scanID)
+            scanID = self.binCheck(scanID)
 
         moveCommand = MovementData()
         self.moveDumpState.setNextMove(moveCommand)
@@ -41,5 +41,6 @@ class ScanDumpState(State):
 
     #check if the robot is close enough to begin docking
     def binCheck(self, id):        
-        crossSection, distance = rasp.scan(self.pub, True, id) 
+        scanID, z, distance = rasp.scan(self.pub, True, id) 
         #set next state to "DockingBinState" if close enough
+        return scanID

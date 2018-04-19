@@ -29,7 +29,7 @@ class ScanDigState(State):
     def run(self, cr, scanID, moveID):
         self.nextState = "MoveDigState"
         if self.movedSoFar >= self.digSiteDist:
-            self.binCheck(scanID)
+            scanID = self.binCheck(scanID)
 
         moveCommand = MovementData()
         self.moveDigState.setNextMove(moveCommand)
@@ -54,5 +54,6 @@ class ScanDigState(State):
     #check if the robot is in the excavation zone
     def binCheck(self, id):        
         #begin scanning lidar
-        crossSection, distance = rasp.scan(self.pub, False, id) 
+        scanID, z, distance = rasp.scan(self.pub, False, id) 
         #if in excavation site set the next state to DigState
+        return scanID

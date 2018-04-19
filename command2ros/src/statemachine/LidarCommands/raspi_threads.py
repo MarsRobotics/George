@@ -22,14 +22,13 @@ import time
 def scan(pub, scanDir, scanID):
     pub.publish(scan=scanDir, serialID=scanID)
     print("Published command to scan forward")  
-
     lt = LidarThreads(debug=False)
     if lt == None:
         return (None, None)
     # make the first thread for reading LIDAR data
     debugPrint("Starting", ROSTA)
     th1_stop = threading.Event()
-    th1 = threading.Thread(target=lt.produce, args=(lt.dataQueue, th1_stop,), name="data_reader")
+    th1 = threading.Thread(target=lt.produce, args=(lt.dataQueue, th1_stop, pub, scanDir, scanID,), name="data_reader")
     debugPrint("Done making thread 1", ROSTA)
 
     # make the second thread to process the LIDAR data
@@ -64,7 +63,7 @@ def scan(pub, scanDir, scanID):
     #plt.colorbar()  # need a colorbar to show the intensity scale
     #plt.show()
 
-    return lt.processedDataArrays[2], lt.processedDataArrays[5]
+    return lt.scanID, lt.processedDataArrays[2], lt.processedDataArrays[5]
     debugPrint("Done running threads", ROSTA)
     debugPrint("exiting with code {}".format(lt.exit()), ROSTA)
     debugPrint("queue size at exit: {}".format(lt.dataQueue.qsize()), ROSTA)
@@ -85,6 +84,8 @@ class LidarThreads():
         # don't forget: netsh interface ip set address "Local Area Connection" static 192.168.0.100
         global nhokreadings
 
+        self.scanID = 0
+
         # controls a number of debug statements which should only print sometimes
         self.debug = debug
 
@@ -102,7 +103,7 @@ class LidarThreads():
         #Number of scans to skip, length 1, name:Skips
         #Number of measurement scans, length 2, name:Scans
         #Documentation: https://en.manu-systems.com/HOK-UTM-30LX-EW_communication_protocol.pdf
-        strcommand = 'MD'+'0000'+'1000'+'00'+'0'+'00'+'\n'
+        strcommand = 'MD'+'0100'+'0700'+'00'+'0'+'99'+'\n'
         self.command=bytes(strcommand, 'ascii')#convert to ascii encoded binary
         # establish communication with the sensor.
         # NOTE, special network settings are required to connect:
@@ -131,11 +132,12 @@ class LidarThreads():
     #   dataQueue - queue to submit data to
     #   stop_event - event to listen to for exit
     ##
-    def produce(self, dataQueue, stop_event):
+    def produce(self, dataQueue, stop_event, pub, scanDir, scanID):
         counter = 0
         angle = -1
         start = time.time()
-        for i in range (0,1):#number of slices to scan along y-axis (moving servo motor)
+        sID=scanID
+        for i in range (0,15):#number of slices to scan along y-axis (moving servo motor)
                 # wait for the Queue to empty
                 while dataQueue.qsize() > 0:
                   pass
@@ -148,14 +150,16 @@ class LidarThreads():
                 # if inp == "":
                 # send scan request to the LIDAR
                 self.socket.sendall(self.command)
+                
+                sID=sID+1
                 #astr ='MD'+'0180'+'0900'+'00'+'0'+'01'+'\n'
                 #self.socket.sendall(astr.encode())
                 #sleep(0.1)
                 debugPrint("Scanning angle...\n", SOCKET_DATA)
                 # receive data from the LIDAR
-                for j in range(0, 90):#number of slices to scan along x-axis (resolution)
+                for j in range(0, 99):#number of slices to scan along x-axis (resolution)?
                     try:
-                        temp = self.socket.recv(4500)#receive up to 4500 bytes of data
+                        temp = self.socket.recv(128)#receive up to 128 bytes of data
                         #debugPrint("Recv:\n" + temp.decode()[:8], SOCKET_DATA)
                         data = temp.decode().split("\n")#decode the data and split it by new line
                         data.reverse()
@@ -176,6 +180,7 @@ class LidarThreads():
                     counter += 1.0
         end = time.time()
         debugPrint("Time difference: {}".format(end-start), ROSTA)
+        self.scanID = sID
 
     ##
     # consume

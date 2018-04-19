@@ -1,5 +1,4 @@
 from states.State import State
-from states.ScanDigState import ScanDigState
 from MovementData import MovementData
 
 class MoveDigState(State):

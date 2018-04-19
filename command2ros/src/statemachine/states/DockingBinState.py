@@ -26,8 +26,7 @@ class DockingBinState(State):
         cr.setCommand(c)
         cr.sendCommand()
 
-        crossSection, distance = rasp.scan(self.pub, False, scanID)
-        scanID += 1
+        scanID, z, distance = rasp.scan(self.pub, False, scanID)
 
         return (scanID, moveID)
 

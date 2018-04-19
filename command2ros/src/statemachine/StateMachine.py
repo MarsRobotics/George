@@ -54,7 +54,7 @@ class StateMachine():
         #transition criteria
         self.inExcavationZone = False   #ScanDigState to DigState
         self.hopperEmpty = True         #MoveState to ScanDigState if true, otherwise ScanDumpState
-        self.inDumpZone = False         #ScanDumpState to DockingBinState               
+        self.inDumpZone = False         #ScanDumpState to DockingBinState         
 
     #control program
     def startRobot(self):
@@ -78,7 +78,7 @@ class StateMachine():
             print("Starting in manual command mode")
 
             while(True):
-                scanID, moveID = self.currentState.run(cr, scanPub, scanID, moveID)           
+                scanID, moveID = self.currentState.run(cr, scanID, moveID)           
                 
                 if self.currentState.autonomousMode:
                     print("switching from manual mode to autonomous mode")
