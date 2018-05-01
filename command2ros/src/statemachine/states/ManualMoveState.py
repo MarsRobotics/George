@@ -15,7 +15,7 @@ class ManualMoveState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ManualMoveState", "ManualMoveState")
-        self.HOST = "192.168.1.140"         #laptop IP
+        self.HOST = "192.168.1.134"         #laptop IP
         self.PORT = 20000                   #communication port
 
         #connect to laptop (note: laptop program is server so must start laptop program first)
@@ -135,7 +135,7 @@ class ManualMoveState(State):
                 pause=c.pause,
                 cancel=c.cancel)  
 
-                digPub.publish(raiseForDig=manualCommand.raiseForDig)
+                digPub.publish(manualCommand.raiseForDig)
         #socket was shut down unexpectedly, shut down robot                         
         except socket.error:
             c = MovementData()
