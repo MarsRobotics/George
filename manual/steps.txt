@@ -1,0 +1,7 @@
+1) Get on same network + make sure laptop IP is correct in ManualMoveState
+2) Run:
+    -roscore
+    -ros serial to arduinos
+    -echo topics: Digger, MovementCommand, ArduinoMessage
+    -ManualControlCompetition
+    -StateMachine
