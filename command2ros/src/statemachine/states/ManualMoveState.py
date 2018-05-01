@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use("agg")
 from states.State import State
 from LidarCommands import raspi_threads as rasp
 from LidarCommands.constants import *
@@ -7,12 +9,13 @@ from ManualData import ManualData
 from ScanData import ScanData
 import socket
 import time
+import matplotlib.pyplot as plt
 
 class ManualMoveState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ManualMoveState", "ManualMoveState")
-        self.HOST = "192.168.1.137"         #laptop IP
+        self.HOST = "192.168.1.140"         #laptop IP
         self.PORT = 20000                   #communication port
 
         #connect to laptop (note: laptop program is server so must start laptop program first)
@@ -33,7 +36,7 @@ class ManualMoveState(State):
     scanID  ID number for the message to be published to the Scan topic
     moveID  ID number for the message to be published to the MovementCommand topic
     '''
-    def run(self, cr, scanID, moveID):              
+    def run(self, movementPub, digPub, scanID, moveID):              
         try:
             self.sock.setblocking(1)            
             manualCommand = receiveData(self.sock)
@@ -44,8 +47,21 @@ class ManualMoveState(State):
                 c = MovementData()
                 c.manual = True
                 c.endProgram = manualCommand.endProgram            
-                cr.setCommand(c)                
-                cr.sendCommand()  
+                #cr.setCommand(c)                
+                #cr.sendCommand()  
+                movementPub.publish(
+                serialID=c.serialID,
+                manual=c.manual,
+                manualDrive=c.manualDrive,
+                manualTurn=c.manualTurn,
+                driveDist=c.driveDist, 
+                turn=c.turn, 
+                dig=c.dig, 
+                dump=c.dump, 
+                packin=c.packin, 
+                eStop=c.eStop, 
+                pause=c.pause,
+                cancel=c.cancel)  
                 print("send command to end program")
                 time.sleep(2)
                 self.endProgram = True
@@ -64,26 +80,28 @@ class ManualMoveState(State):
                     #tell motor to get into position and begin to move for scanning   
                     scanID, z, distance = rasp.scan(self.pub, True, scanID)  
 
-                    if z != None:
-                        print("distance")    
-                        filename = "LiDAR_Scans/forward_LiDAR_distances_" + str(scanID) + ".txt"
-                        with open(filename,"w") as f:
-                            for d in distance:
-                                p = str(d) + ", "
-                                f.write(p)                            
-                        print("done writing LiDAR data")
+                    print("distance")    
+                    filename = "LiDAR_Scans/forward_LiDAR_distances_" + str(scanID) + ".txt"
+                    with open(filename,"w") as f:
+                        for d in distance:
+                            p = str(d) + ", "
+                            f.write(p)                            
+                    print("done writing LiDAR data")
+
+                    self.view(z, distance)
                 elif manualCommand.backwardScan:
                     #tell motor to get into position and begin to move for scanning
                     scanID, z, distance = rasp.scan(self.pub, False, scanID)
 
-                    if z != None:
-                        print("distance")    
-                        filename = "LiDAR_Scans/backwards_LiDAR_distances_" + str(scanID) + ".txt"
-                        with open(filename,"w") as f:
-                            for d in distance:
-                                p = str(d) + ", "
-                                f.write(p)                            
-                        print("done writing LiDAR data")
+                    print("distance")    
+                    filename = "LiDAR_Scans/backwards_LiDAR_distances_" + str(scanID) + ".txt"
+                    with open(filename,"w") as f:
+                        for d in distance:
+                            p = str(d) + ", "
+                            f.write(p)                            
+                    print("done writing LiDAR data")
+
+                    self.view(z, distance)
                 scanID += 1   
             #command robot to move
             else:                
@@ -100,15 +118,43 @@ class ManualMoveState(State):
                 c.turn = manualCommand.turn
                 moveID += 1
             
-                cr.setCommand(c)
-                print("send movement command to robot")
-                cr.sendCommand()   
+                #cr.setCommand(c)
+                #print("send movement command to robot")
+                #cr.sendCommand()   
+                movementPub.publish(
+                serialID=c.serialID,
+                manual=c.manual,
+                manualDrive=c.manualDrive,
+                manualTurn=c.manualTurn,
+                driveDist=c.driveDist, 
+                turn=c.turn, 
+                dig=c.dig, 
+                dump=c.dump, 
+                packin=c.packin, 
+                eStop=c.eStop, 
+                pause=c.pause,
+                cancel=c.cancel)  
+
+                digPub.publish(raiseForDig=manualCommand.raiseForDig)
         #socket was shut down unexpectedly, shut down robot                         
         except socket.error:
             c = MovementData()
             c.endProgram = True           
-            cr.setCommand(c)                
-            cr.sendCommand()  
+            #cr.setCommand(c)                
+            #cr.sendCommand()  
+            movementPub.publish(
+                serialID=c.serialID,
+                manual=c.manual,
+                manualDrive=c.manualDrive,
+                manualTurn=c.manualTurn,
+                driveDist=c.driveDist, 
+                turn=c.turn, 
+                dig=c.dig, 
+                dump=c.dump, 
+                packin=c.packin, 
+                eStop=c.eStop, 
+                pause=c.pause,
+                cancel=c.cancel)  
             print("send command to end program")
             time.sleep(2)
             self.endProgram = True
@@ -122,3 +168,8 @@ class ManualMoveState(State):
     #keep publisher for Scan topic
     def setPub(self, publisher):
         self.pub = publisher   
+
+    def view(self, z, distance):        
+        plt.pcolormesh([z, distance])  # Figure out how this works! Also, why z and dist
+        plt.colorbar()  # need a colorbar to show the intensity scale
+        plt.show()

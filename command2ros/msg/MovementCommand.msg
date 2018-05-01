@@ -6,7 +6,7 @@ int32 manualTurn
 
 float32 driveDist
 int32 turn
-bool dig
+int32 dig
 bool dump
 bool packin
 bool eStop

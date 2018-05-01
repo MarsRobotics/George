@@ -6,3 +6,4 @@ bool errorDigging
 bool errorDumping
 bool errorTurning
 int32 messageID
+int32 digVal

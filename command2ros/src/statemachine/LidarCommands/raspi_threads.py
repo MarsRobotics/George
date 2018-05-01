@@ -8,7 +8,7 @@ import threading
 import socket
 #from mpl_toolkits.mplot3d import Axes3D
 #from matplotlib import cm
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 from LidarCommands.utility import *
 from LidarCommands.constants import *
@@ -55,15 +55,16 @@ def scan(pub, scanDir, scanID):
 
     th1_stop.set()
     th2_stop.set()
-
     x = np.asarray(lt.processedDataArrays[0])
     y = np.asarray(lt.processedDataArrays[1])
     z = np.asarray(lt.processedDataArrays[2])
+    distance = np.asarray(lt.processedDataArrays[5])
+
     #plt.pcolormesh([z, lt.processedDataArrays[5]])  # Figure out how this works! Also, why z and dist
     #plt.colorbar()  # need a colorbar to show the intensity scale
     #plt.show()
 
-    return lt.scanID, lt.processedDataArrays[2], lt.processedDataArrays[5]
+    return lt.scanID, z, distance
     debugPrint("Done running threads", ROSTA)
     debugPrint("exiting with code {}".format(lt.exit()), ROSTA)
     debugPrint("queue size at exit: {}".format(lt.dataQueue.qsize()), ROSTA)
@@ -103,8 +104,10 @@ class LidarThreads():
         #Number of scans to skip, length 1, name:Skips
         #Number of measurement scans, length 2, name:Scans
         #Documentation: https://en.manu-systems.com/HOK-UTM-30LX-EW_communication_protocol.pdf
-        strcommand = 'MD'+'0100'+'0700'+'00'+'0'+'99'+'\n'
-        self.command=bytes(strcommand, 'ascii')#convert to ascii encoded binary
+        strStartCommand = 'MD'+'0300'+'0700'+'00'+'0'+'00'+'\n'
+        strEndCommand = 'QT'+'\n'
+        self.StartCommand=bytes(strStartCommand, 'ascii')#convert to ascii encoded binary
+        self.EndCommand=bytes(strEndCommand, 'ascii')
         # establish communication with the sensor.
         # NOTE, special network settings are required to connect:
         # IP: 192.168.1.11, Subnet Mask: 255.255.255.0 (default) Default Gateway: 192.168.0.1
@@ -149,7 +152,7 @@ class LidarThreads():
                 # inp = raw_input(">>> Press enter when ready to make a scan\n")
                 # if inp == "":
                 # send scan request to the LIDAR
-                self.socket.sendall(self.command)
+                self.socket.sendall(self.StartCommand)
                 
                 sID=sID+1
                 #astr ='MD'+'0180'+'0900'+'00'+'0'+'01'+'\n'
@@ -157,9 +160,9 @@ class LidarThreads():
                 #sleep(0.1)
                 debugPrint("Scanning angle...\n", SOCKET_DATA)
                 # receive data from the LIDAR
-                for j in range(0, 99):#number of slices to scan along x-axis (resolution)?
+                for j in range(0, 100):#number of slices to scan along x-axis (resolution)?
                     try:
-                        temp = self.socket.recv(128)#receive up to 128 bytes of data
+                        temp = self.socket.recv(3)#receive up to 24 bits of data
                         #debugPrint("Recv:\n" + temp.decode()[:8], SOCKET_DATA)
                         data = temp.decode().split("\n")#decode the data and split it by new line
                         data.reverse()
@@ -179,7 +182,9 @@ class LidarThreads():
                             continue
                     counter += 1.0
         end = time.time()
+        dataQueue.put(('end', angle))
         debugPrint("Time difference: {}".format(end-start), ROSTA)
+        self.socket.sendall(self.EndCommand)
         self.scanID = sID
 
     ##
@@ -200,11 +205,16 @@ class LidarThreads():
         thetaLines = []
         distLines = []
         timeLines = []
-
+        xLines.append([])
+        yLines.append([])
+        zLines.append([])
+        phiLines.append([])
+        thetaLines.append([])
+        distLines.append([])
         dataSet = ""
         currTime = None
         emptied = False
-		
+        i = 0
         index = 0
         start = time.time()
         while not stop_event.is_set():
@@ -212,27 +222,36 @@ class LidarThreads():
             try:
                 # get some data from the queue, process it to cartesian
                 dataline, anglePhi = dataQueue.get(timeout=0.25)
+                print("dataQueue data: {}".format(dataline))
                 emptied = False
-
-                if dataline == "":
+                if dataline == 'end':
+                    xLines.append([])
+                    yLines.append([])
+                    zLines.append([])
+                    phiLines.append([])
+                    thetaLines.append([])
+                    distLines.append([])
+                    i += 1
+                    continue
+                elif dataline == "":
                     if not dataSet == "":
                         for string in splitNparts(dataSet,64):
                             X, Y, Z, dist, phi, th = decode_new(string, anglePhi)
 
                             #self.slitAngle = lastAngle
 
-                            xLines = xLines + X
-                            yLines = yLines + Y
-                            zLines = zLines + Z
-                            phiLines = phiLines + phi
-                            thetaLines = thetaLines + th
-                            distLines = distLines + dist
+                            xLines[i].append(X)
+                            yLines[i].append(Y)
+                            zLines[i].append(Z)
+                            phiLines[i].append(phi)
+                            thetaLines.append(th)
+                            distLines.append(dist)
                             # timeLines = timeLines + currTime
                             #debugPrint(str(distLines), SOCKET_DATA)
 
                     dataSet = ""
                     continue
-                elif dataline == self.command:
+                elif dataline == self.StartCommand:
                     counter = 0
                 else:
                     counter += 1
@@ -250,7 +269,6 @@ class LidarThreads():
                     debugPrint( "Data Queue is empty", SOCKET_MSG)
                     emptied = True
                 continue
-
         self.processedDataArrays = (xLines, yLines, zLines, phiLines, thetaLines, distLines)
         end = time.time()
         debugPrint("Time difference: {}".format(end-start), ROSTA)

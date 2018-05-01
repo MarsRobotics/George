@@ -12,6 +12,7 @@ from command2ros.msg import MovementCommand
 from command2ros.msg import ScanCommand
 from command2ros.msg import ArduinoMessage
 from command2ros.msg import Feedback
+from command2ros.msg import Digger
 from CommandRobot import CommandRobot
 from FeedbackHandler import FeedbackHandler
 
@@ -62,23 +63,23 @@ class StateMachine():
         scanID = 1
         moveID = 1
         print("robot is starting")
-        movementPub, scanPub = self.rosSetup()  
+        movementPub, scanPub, digPub = self.rosSetup()  
         print("ros has been set up")  
-        feedbackHandler = FeedbackHandler()
-        feedbackHandler.start()
-        print("feedback handler set up")       
-        dd = self.dataDistributorSetup(movementPub) 
-        print("data distributor to send commands is set up")         
+        #feedbackHandler = FeedbackHandler()
+        #feedbackHandler.start()
+        #print("feedback handler set up")       
+        #dd = self.dataDistributorSetup(movementPub) 
+        #print("data distributor to send commands is set up")         
 
         #use to update the next command and send to arduino mega
-        cr = CommandRobot()
+        #cr = CommandRobot()
         print("command robot is ready to command")
 
         if self.currentState.name == "ManualMoveState":
             print("Starting in manual command mode")
 
             while(True):
-                scanID, moveID = self.currentState.run(cr, scanID, moveID)           
+                scanID, moveID = self.currentState.run(movementPub, digPub, scanID, moveID)           
                 
                 if self.currentState.autonomousMode:
                     print("switching from manual mode to autonomous mode")
@@ -89,8 +90,9 @@ class StateMachine():
                     print("ending the program")
                     break
 
+        ''' uncomment for autonomous mode
         if self.currentState.name == "StartState":
-            scanID, moveID = self.currentState.run(cr, scanID, moveID)
+            scanID, moveID = self.currentState.run(movementPub, scanID, moveID)
 
             #set the current state to the specified next state
             next = self.currentState.nextState
@@ -98,15 +100,17 @@ class StateMachine():
 
         while not end:            
             print("Run " + self.currentState.name)
-            scanID, moveID = self.currentState.run(cr, scanID, moveID)
+            scanID, moveID = self.currentState.run(movementPub, scanID, moveID)
 
             #set the current state to the specified next state
             next = self.currentState.nextState
             self.setNext(next) 
 
+        '''
+
         if end:         
-            dd.join()            
-            print("data distributor stopped")
+            #dd.join()            
+            #print("data distributor stopped")
             time.sleep(2)
             exit()
         return
@@ -140,13 +144,14 @@ class StateMachine():
         #create ros publisher to update/send data
         movementPub = rospy.Publisher('MovementCommand', MovementCommand, queue_size=10)
         scanPub = rospy.Publisher('Scan', ScanCommand, queue_size=10)
+        digPub = rospy.Publisher('Digger', Digger, queue_size=10)
         rospy.init_node('command2ros', anonymous=True)
 
         self.ScanDigState.setPub(scanPub)
         self.ScanDumpState.setPub(scanPub)
         self.ManualMoveState.setPub(scanPub)
         self.StartState.setPub(scanPub)
-        return (movementPub, scanPub)
+        return (movementPub, scanPub, digPub)
 
 #PROGRAM ENTRY
 if __name__ == "__main__":
