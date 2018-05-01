@@ -18,8 +18,6 @@ Key press       Command
  u               unwind digger (run in reverse)
  p               pack in
  d               dump
- f               scan forward
- b               scan backwards
 '''
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -75,14 +73,6 @@ def on_press(key):
     elif key == Key.space:
         data.stop = True
         print("Set command to stop")
-        sendData(sock, data)
-    elif key == KeyCode.from_char('f'):
-        data.forwardScan = True
-        print("Scan LiDAR forward")
-        sendData(sock, data)
-    elif key == KeyCode.from_char('b') :
-        data.backwardScan = True
-        print("Scan LiDAR backwards")
         sendData(sock, data)
     else:
         print("Not a valid command")
