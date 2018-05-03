@@ -15,7 +15,7 @@ class ManualMoveState(State):
     #init attributes of state
     def __init__(self):
         super().__init__("ManualMoveState", "ManualMoveState")
-        self.HOST = "192.168.1.134"         #laptop IP
+        self.HOST = "192.168.1.110"         #laptop IP
         self.PORT = 20000                   #communication port
 
         #connect to laptop (note: laptop program is server so must start laptop program first)
