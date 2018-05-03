@@ -8,12 +8,13 @@ class MovementData:
         self.driveDist = 0      #distance to drive forward in meters
         self.turn = 0           #degrees to turn robot
         self.dig = 0
-        self.dump = False
+        self.dump = 0
         self.packin = False     #ending sequence, wheels roll in so tucked under
         self.eStop = False      
         self.pause = False
 
         self.serialID = 0
+        self.raiseForDig = 0
         self.cancel = False
         self.manualDrive = 0
         self.manualTurn = 0

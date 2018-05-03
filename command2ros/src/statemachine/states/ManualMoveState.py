@@ -116,6 +116,7 @@ class ManualMoveState(State):
                 c.serialID = moveID
                 c.driveDist = manualCommand.drive
                 c.turn = manualCommand.turn
+                c.raiseForDig = manualCommand.raiseForDig
                 moveID += 1
             
                 #cr.setCommand(c)
@@ -133,9 +134,21 @@ class ManualMoveState(State):
                 packin=c.packin, 
                 eStop=c.eStop, 
                 pause=c.pause,
-                cancel=c.cancel)  
-
-                digPub.publish(manualCommand.raiseForDig)
+                cancel=c.cancel,
+                raiseForDig=c.raiseForDig)  
+                '''
+                cam = manualCommand.cameraNum
+                ret = None
+                frame = None
+                if cam == 2:
+                    ret, frame = backCam.read()#capture a frame from the back cam
+                elif cam == 1:
+                    ret, frame = digCam.read()
+                else:            
+                    ret, frame = frontCam.read()#default is the front 
+                sendData(self.sock, frame)
+                '''
+                #digPub.publish(manualCommand.raiseForDig)
         #socket was shut down unexpectedly, shut down robot                         
         except socket.error:
             c = MovementData()
