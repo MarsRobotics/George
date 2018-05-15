@@ -18,6 +18,11 @@ Key press       Command
  u               unwind digger (run in reverse)
  p               pack in
  d               dump
+ s               drive forward slow
+ 0               lower & dig
+ 1               dig & drive forward slowly
+ 2               dig & drive forward slowly & lower
+ 3               lower & drive normal
 '''
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,6 +38,34 @@ def on_press(key):
     if key == Key.up:
         data.manualDrive = 1
         print("Set command to drive forward")
+        sendData(sock, data)
+    elif key == KeyCode.from_char('s'):
+        data.manualDrive = 2
+        print("Set command to drive slowly")
+        sendData(sock, data)
+    elif key == KeyCode.from_char('0'):
+        data.raiseForDig = -1
+        speed = int(input("Speed: "))
+        data.dig = speed
+        print("Set command to lower and dig")
+        sendData(sock, data)
+    elif key == KeyCode.from_char('1'):
+        data.manualDrive = 2
+        speed = int(input("Speed: "))
+        data.dig = speed
+        print("Set command to lower and dig")
+        sendData(sock, data)
+    elif key == KeyCode.from_char('2'):
+        data.raiseForDig = -1
+        speed = int(input("Speed: "))
+        data.dig = speed
+        data.manualDrive = 2
+        print("Set command to lower, dig, drive forward slowly")
+        sendData(sock, data)
+    elif key == KeyCode.from_char('3'):
+        data.raiseForDig = -1
+        data.manualDrive = 1
+        print("Set command to lower and drive normal")
         sendData(sock, data)
     elif key == Key.down:  
         data.manualDrive = -1
@@ -58,10 +91,6 @@ def on_press(key):
         speed = int(input("Speed: "))
         data.dig = speed
         print("Set command to dig (collect)")
-        sendData(sock, data)
-    elif key == KeyCode.from_char('u'):
-        data.dig = -1
-        print("Set command to reverse digger (unwind)")
         sendData(sock, data)
     elif key == KeyCode.from_char('p'):
         data.packin = True

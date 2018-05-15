@@ -1,7 +1,14 @@
 1) Get on same network + make sure laptop IP is correct in ManualMoveState
 2) Run:
     -roscore
-    -ros serial to arduinos
-    -echo topics: Digger, MovementCommand, ArduinoMessage
-    -ManualControlCompetition
-    -StateMachine
+    -ros serial to arduinos: rosrun rosserial_python serial_node.py _port:=/dev/ttyACM0 _baud:=57600
+    -echo topics: Digger, MovementCommand, ArduinoMessage: rostopic echo topic_name
+    -ManualControlCompetition.py *must run before StateMachine
+    -StateMachine.py: rosrun command2ros StateMachine.py
+3) Rebuilding ros_lib
+    -remove ros_lib in arduino folder on pi: rm -r *
+    -cd into ros_catkin_wks: catkin_make
+        -*if normal catkin_make does not completely rebuild and you need it to: catkin_make --force-make
+    -cd arduino folder: rosrun rosserial_arduino make_libraries.py .
+        -roscore needs to be up
+    -put ros_lib on arduino

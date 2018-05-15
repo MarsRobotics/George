@@ -10,7 +10,6 @@ from socket import error as socket_error
 # How big of a string should we use to send the data body size
 BODY_SIZE_STRING_SIZE = 50
 
-
 ##
 # sendData
 #

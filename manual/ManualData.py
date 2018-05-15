@@ -9,7 +9,7 @@ class ManualData:
         self.turn = 0
         self.dig = 0
         self.raiseForDig = 0
-        self.dump = False
+        self.dump = 0
         self.packin = False     #ending sequence, wheels roll in so tucked under
         self.forwardScan = False 
         self.backwardScan = False 
@@ -18,4 +18,5 @@ class ManualData:
         self.stop = False
         self.autonomousMode = False
         self.endProgram = False
+        self.cameraNum = 0        
         return
