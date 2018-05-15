@@ -55,7 +55,8 @@ def on_press(key):
         print("Set command to lower digger")
         sendData(sock, data)
     elif key == KeyCode.from_char('c'):
-        data.dig = 1
+        speed = int(input("Speed: "))
+        data.dig = speed
         print("Set command to dig (collect)")
         sendData(sock, data)
     elif key == KeyCode.from_char('u'):
